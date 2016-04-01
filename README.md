@@ -7,5 +7,5 @@ DataVisualization_Rutgers.R is the file of R commands
 
 DataVisualizationandR_Rutgers.pdf are the presentation slides
 
-Associated screencast videos available at youtube.com/librarianwomack/
+Associated screencast videos available at http://youtube.com/librarianwomack/
 
