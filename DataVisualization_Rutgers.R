@@ -826,16 +826,13 @@ runExample("11_timer") # an automated timer
 library(dplyr)
 library(ggvis)
 
-ggvis(mtcars, props(x = ~wt, y = ~mpg)) +
-  layer_smooth(se = TRUE,
-               span = input_slider(min = 0.3, max = 1, value = 0.8, step = 0.1,
-                                   label = "Smoothing span")) +
-  layer_point() +
-  guide_axis("x", title = "Weight") +
-  guide_axis("y", title = "MPG")
+mtcars %>%
+  ggvis(~wt, ~mpg) %>%
+  layer_smooths(span = input_slider(0.5, 1, value = 1)) %>%
+  layer_points(size := input_slider(100, 1000, value = 100))
 
-ggvis(mtcars, props(x = ~wt)) +
-  layer_density(
+mtcars %>% ggvis(x = ~wt) %>%
+  layer_densities(
     adjust = input_slider(.1, 2, value = 1, step = .1, label = "Bandwidth adjustment"),
     kernel = input_select(
       c("Gaussian" = "gaussian",
