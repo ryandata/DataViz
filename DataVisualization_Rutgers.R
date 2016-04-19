@@ -75,7 +75,7 @@ devtools::install_github("ramnathv/rCharts")
     #for bigvis, you will need to install Rtools separately 
     #see cran.r-project.org/bin/windows/Rtools
     #requires restart of R too
-devtools::install_github("bigvis")
+devtools::install_github("hadley/bigvis")
 devtools::install_github(c("hadley/testthat", "rstudio/ggvis"))
 
 
