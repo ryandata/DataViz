@@ -9,3 +9,4 @@ DataVisualizationandR_Rutgers.pdf are the presentation slides
 
 Associated screencast videos available at http://youtube.com/librarianwomack/
 
+via this playlist: https://www.youtube.com/playlist?list=PLCj1LhGni3hPGy6Kj1AFxHYkKklxenO9D
