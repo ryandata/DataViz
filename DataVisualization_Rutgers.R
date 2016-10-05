@@ -2,7 +2,7 @@
 # Ryan Womack, Data Librarian, rwomack@rutgers.edu
 # R script to accompany 
 # Rutgers Data Visualization Workshop
-# Spring 2016 (2016-03-31 version)
+# Fall 2016 (2016-10-03 version)
 # For all files, see
 # http://libguides.rutgers.edu/data_R
 
@@ -75,7 +75,7 @@ devtools::install_github("ramnathv/rCharts")
     #for bigvis, you will need to install Rtools separately 
     #see cran.r-project.org/bin/windows/Rtools
     #requires restart of R too
-devtools::install_github("hadley/bigvis")
+devtools::install_github("bigvis")
 devtools::install_github(c("hadley/testthat", "rstudio/ggvis"))
 
 
@@ -847,7 +847,139 @@ mtcars %>% ggvis(x = ~wt) %>%
 
 
 ##############################
-# SECTION 8
+# Section 8
+# TESSERA
+##############################
+
+# Running Tessera on AWS EMR
+
+# before you start, make sure you have access 
+# to your AWS key file (or generate a new one)
+
+# create security credentials 
+# configure Amazon CLI (command line interface) 
+# with these credentials
+
+# create an S3 bucket for use by the cluster
+# http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/gsg-create-bucket.html
+
+# follow instructions/scripts to set up cluster at
+# https://github.com/tesseradata/install-emr/tree/master/emr-3.2.1
+# this page also links to help on the AWS steps
+
+# ssh into your tessera cluster
+# if you get an error regarding your key in linux
+# use the command
+
+chmod 400 your_key.pem
+
+# to restrict access to the key
+
+# if the rstudio installation does not complete
+# complete the rstudio installation manually with 
+
+sudo wget http://download2.rstudio.org/rstudio-server-0.98.1103-x86_64.rpm^C
+
+sudo yum install --nogpgcheck rstudio-server-0.98.1103-x86_64.rpm
+
+# you'll need this too
+sudo yum install openssl-devel
+sudo yum install atlas atlas-devel lapack-devel blas-devel
+
+# have to do this too, unfortunately
+sudo yum remove R*
+  sudo yum install R R-core R-core-devel R-devel R-java R-java-devel
+
+
+sudo R
+# run the remaining commands as root user in R
+
+install.packages("fastICA", dependencies=TRUE)
+install.packages("devtools") # if not installed
+library(devtools)
+install_github("tesseradata/datadr")
+install_github("tesseradata/trelliscope")
+install_github("hafen/housingData")
+install.packages("RJSONIO", dependencies=TRUE)
+
+# now run the sample code at
+# http://tessera.io/#quickstart
+# or here http://tessera.io/docs-trelliscope/#quickstart
+# with explanatory comments
+
+# using the Rstudio browser
+library(housingData)
+library(datadr); library(trelliscope)
+
+# look at housing data
+head(housing)
+
+# divide by county and state
+byCounty <- divide(housing,
+                   by = c("county", "state"), update = TRUE)
+
+# look at summaries
+summary(byCounty)
+
+# look at overall distribution of median list price
+priceQ <- drQuantile(byCounty,
+                     var = "medListPriceSqft")
+xyplot(q ~ fval, data = priceQ,
+       scales = list(y = list(log = 10)))
+
+# slope of fitted line of list price for each county
+lmCoef <- function(x)
+  coef(lm(medListPriceSqft ~ time, data = x))[2]
+# apply lmCoef to each subset
+byCountySlope <- addTransform(byCounty, lmCoef)
+
+# look at a subset of transformed data
+byCountySlope[[1]]
+
+# recombine all slopes into a single data frame
+countySlopes <- recombine(byCountySlope, combRbind)
+plot(sort(countySlopes$val))
+
+# make a time series trelliscope display
+vdbConn("housingjunk/vdb", autoYes = TRUE)
+
+# make and test panel function
+timePanel <- function(x)
+  xyplot(medListPriceSqft + medSoldPriceSqft ~ time,
+         data = x, auto.key = TRUE, ylab = "$ / Sq. Ft.")
+timePanel(byCounty[[1]][[2]])
+
+# make and test cognostics function
+priceCog <- function(x) { list(
+  slope = cog(lmCoef(x), desc = "list price slope"),
+  meanList = cogMean(x$medListPriceSqft),
+  listRange = cogRange(x$medListPriceSqft),
+  nObs = cog(sum(!is.na(x$medListPriceSqft)),
+             desc = "number of non-NA list prices")
+)}
+priceCog(byCounty[[1]][[2]])
+
+# add display panel and cog function to vdb
+makeDisplay(byCounty,
+            name = "list_sold_vs_time",
+            desc = "List and sold price over time",
+            panelFn = timePanel, cogFn = priceCog,
+            width = 400, height = 400,
+            lims = list(x = "same"))
+
+# view the display
+view()
+
+# can use this link as a substitute for your own
+# trelliscope if it is not working
+
+# https://hafen.shinyapps.io/tesseraTutorial/#name=list_sold_vs_time_quickstart&group=common&labels=county,state
+  
+  
+  
+
+##############################
+# SECTION 9
 # BIG DATA
 ##############################
 
@@ -1081,4 +1213,3 @@ ggplot(dsdp, aes(dist, speed)) +
 
 dsd_speed <- transform(dsd, speed = is.na(speed))
 qplot(dist, .mean, data = subset(dsd_speed, .count > 100), geom = "line", colour = factor(speed))
-
